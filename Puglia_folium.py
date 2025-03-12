@@ -3,17 +3,17 @@ import xarray as xr
 import numpy as np
 import folium
 
-# Percorso del file NetCDF
+# Path to the NetCDF file
 nc_file = "/Users/francesco/Desktop/opengeo/Dati_puglia.nc"
 
-# Caricare il dataset
+# Load the dataset
 ds = xr.open_dataset(nc_file)
 
-# Definiamo i confini della Puglia
+# Define the geographical boundaries of Puglia
 lat_min, lat_max = 39.8, 42.2
 lon_min, lon_max = 15.0, 19.5
 
-# Troviamo le coordinate più vicine disponibili nel dataset
+# Find the closest available coordinates in the dataset
 lat_available = ds["lat"].values
 lon_available = ds["lon"].values
 
@@ -22,22 +22,22 @@ lat_max_nearest = min(lat_available, key=lambda x: abs(x - lat_max))
 lon_min_nearest = min(lon_available, key=lambda x: abs(x - lon_min))
 lon_max_nearest = min(lon_available, key=lambda x: abs(x - lon_max))
 
-# Selezioniamo i dati usando le coordinate corrette
+# Select data using the correct coordinates
 if np.all(np.diff(ds["lat"].values) > 0):
     precip_puglia = ds["R10mm"].sel(lat=slice(lat_min_nearest, lat_max_nearest), lon=slice(lon_min_nearest, lon_max_nearest))
 else:
     precip_puglia = ds["R10mm"].sel(lat=slice(lat_max_nearest, lat_min_nearest), lon=slice(lon_min_nearest, lon_max_nearest))
 
-# Controlliamo se il dataset ha una dimensione temporale e calcoliamo la media temporale
+# Check if the dataset has a time dimension and compute the temporal average
 if "time" in ds.dims:
     precip_puglia = precip_puglia.mean(dim="time")
 
-# Connessione a SQLite
+# Connect to SQLite database
 db_name = "weather_data.sqlite"
 conn = sqlite3.connect(db_name)
 cur = conn.cursor()
 
-# Creazione tabella
+# Create table if it doesn't exist
 cur.execute('''
     CREATE TABLE IF NOT EXISTS Rainfall (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -47,41 +47,42 @@ cur.execute('''
     )
 ''')
 
-# Inserimento dati
+# Insert data into the database
 for lat in precip_puglia.lat.values:
     for lon in precip_puglia.lon.values:
         value = precip_puglia.sel(lat=lat, lon=lon).values.item()
         cur.execute('''INSERT INTO Rainfall (latitude, longitude, r10mm) VALUES (?, ?, ?)''',
                     (lat, lon, value))
 
-# Salva e chiude
+# Save and close the connection
 conn.commit()
 conn.close()
 
-print("Dati estratti da NetCDF e salvati in SQLite con successo!")
+print("Data extracted from NetCDF and saved to SQLite successfully!")
 
-# Connessione al database per recuperare i dati
+# Connect to the database to retrieve the data
 conn = sqlite3.connect(db_name)
 cur = conn.cursor()
-# Recupera i dati dal database
+
+# Retrieve data from the database
 cur.execute("SELECT latitude, longitude, r10mm FROM Rainfall")
 data = cur.fetchall()
 conn.close()
 
-# Filtra i dati validi (eliminando i None)
+# Filter valid data (removing None values)
 valid_data = [d[2] for d in data if d[2] is not None]
 
-# Calcola il valore massimo di r10mm per scalare l'opacità
-max_r10mm = max(valid_data) if valid_data else 1  # Se non ci sono valori validi, usa 1 per evitare errore
+# Calculate the maximum r10mm value to scale the opacity
+max_r10mm = max(valid_data) if valid_data else 1  # Use 1 to avoid errors if no valid values exist
 
-# Creazione della mappa interattiva con Folium
+# Create an interactive map with Folium
 mappa = folium.Map(location=[41.0, 16.5], zoom_start=7)
 
-# Aggiunta dei dati alla mappa
+# Add data points to the map
 for row in data:
     lat, lon, r10mm = row
-    if r10mm is not None:  # Evita errori su valori nulli
-        fill_opacity = min(r10mm / max_r10mm, 0.8)  # Normalizza i valori tra 0 e 0.8
+    if r10mm is not None:  # Avoid errors with null values
+        fill_opacity = min(r10mm / max_r10mm, 0.8)  # Normalize values between 0 and 0.8
         folium.CircleMarker(
             location=[lat, lon],
             radius=5,
@@ -89,13 +90,13 @@ for row in data:
             fill=True,
             fill_color="blue",
             fill_opacity=fill_opacity,
-            popup=f"Giorni di pioggia >10mm: {r10mm:.2f}"
+            popup=f"Days with rainfall >10mm: {r10mm:.2f}"
         ).add_to(mappa)
 
-# Salva la mappa in un file HTML
+# Save the interactive map as an HTML file
 mappa.save("mappa_interattiva.html")
 
-print("Mappa interattiva salvata come mappa_interattiva.html! Aprila in un browser per visualizzarla.")
+print("Interactive map saved as mappa_interattiva.html! Open it in a browser to view it.")
 
 
 

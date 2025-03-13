@@ -28,7 +28,7 @@ The dataset should be in **NetCDF (.nc) format** and contain the following key v
 │
 │── output/                # Directory where generated files are stored
 │   ├── weather_data.json       # Exported JSON file
-│   ├── Interactive_map.html  # Interactive map
+│   ├── Interactive_map.html    # Interactive map
 │   ├── weather_data.sqlite     # SQLite database with weather data
 │
 │── requirements.txt       # List of required dependencies

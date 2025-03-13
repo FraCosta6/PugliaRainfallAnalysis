@@ -140,15 +140,6 @@ To efficiently store and query the precipitation data for visualization, the dat
 | `R10mm`      | REAL      | Number of days with precipitation >10mm in the recorded period |
 | `timestamp`  | TEXT      | Time of data recording (if available in the dataset) |
 
-### **How Data is Used for Mapping**
-- Each row in the database corresponds to a specific geographic point in Puglia, defined by `latitude` and `longitude`.
-- The `R10mm` value indicates how many days in a given period experienced heavy rainfall (greater than 10mm).
-- The dataset is queried to extract precipitation values for different locations, which are then visualized on an interactive **Folium** map.
-- The visualization represents high precipitation areas using **color-coded markers or a heatmap**, where:
-  - **Low precipitation (R10mm < 5 days)** → Blue
-  - **Moderate precipitation (5 ≤ R10mm ≤ 15 days)** → Yellow
-  - **High precipitation (R10mm > 15 days)** → Red
-
 This structured approach allows easy querying, filtering, and visualization of precipitation trends in the Puglia region.
 
 ### **How to Read and Interpret the Interactive Map**

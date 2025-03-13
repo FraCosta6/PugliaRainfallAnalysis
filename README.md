@@ -20,21 +20,20 @@ The dataset should be in **NetCDF (.nc) format** and contain the following key v
 
 ## Project Structure
 
-```
-project_root/
-│── data/		   # Directory for storing NetCDF files
-│   ├── Example_file.nc   # Sample dataset (to be placed here)
+│── data/                  # Directory for storing NetCDF files
+│   ├── Example_file.nc    # Sample dataset (to be placed here)
 │
-│── scripts/		   # Directory for storing scripts
-│   ├── Puglia_folium.py  # Main script to process and visualize data
+│── scripts/               # Directory for storing scripts
+│   ├── Puglia_folium.py   # Main script to process and visualize data
 │
-│── output/		   # Directory where generated files are stored
-│   ├── weather_data.json  # Exported JSON file
-│   ├── mappa_interattiva.html # Interactive map
+│── output/                # Directory where generated files are stored
+│   ├── weather_data.json       # Exported JSON file
+│   ├── Interactive_map.html  # Interactive map
+│   ├── weather_data.sqlite     # SQLite database with weather data
 │
-│── requirements.txt  # List of required dependencies
-│── README.md         # Project documentation
-```
+│── requirements.txt       # List of required dependencies
+│── README.md              # Project documentation
+
 
 ## Installation
 

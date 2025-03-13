@@ -96,7 +96,7 @@ for row in data:
         ).add_to(mappa)
 
 # Save the interactive map as an HTML file
-mappa.save("mappa_interattiva.html")
+mappa.save("Interactive_map.html")
 
 print("Interactive map saved as mappa_interattiva.html! Open it in a browser to view it.")
 

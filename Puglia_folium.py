@@ -51,46 +51,34 @@ cur.execute('''
 # Insert data into the database
 for lat in precip_puglia.lat.values:
     for lon in precip_puglia.lon.values:
-        value = precip_puglia.sel(lat=lat, lon=lon).values.item()
-        if not np.isnan(value):  # Ignore NaN values
-            cur.execute('''INSERT INTO Rainfall (latitude, longitude, r10mm) VALUES (?, ?, ?)''',
-                        (lat, lon, value))
+        r10mm_value = precip_puglia.sel(lat=lat, lon=lon).values.item()
+        cur.execute('''
+            INSERT INTO Rainfall (latitude, longitude, r10mm)
+            VALUES (?, ?, ?)
+        ''', (lat, lon, r10mm_value))
 
-# Save and close the connection
 conn.commit()
-conn.close()
-
-print("Data extracted from NetCDF and saved to SQLite successfully!")
-
-# Connect to the database to retrieve the data
-conn = sqlite3.connect(db_name)
-cur = conn.cursor()
 
 # Retrieve data from the database
-cur.execute("SELECT latitude, longitude, r10mm FROM Rainfall")
-data = cur.fetchall()
-conn.close()
-
-# Filter valid data (removing None values)
-valid_data = [d[2] for d in data if d[2] is not None]
-
-# Calculate the maximum r10mm value to scale the opacity
-max_r10mm = max(valid_data) if valid_data else 1  # Use 1 to avoid errors if no valid values exist
+cur.execute('SELECT latitude, longitude, r10mm FROM Rainfall')
+rows = cur.fetchall()
 
 # Create an interactive map with Folium
 mappa = folium.Map(location=[41.0, 16.5], zoom_start=7)
 
-# Add data points to the map
-for row in data:
+# Add data points to the map, filtering out points outside Puglia
+for row in rows:
     lat, lon, r10mm = row
-    if r10mm is not None:  # Avoid errors with null values
-        fill_opacity = min(r10mm / max_r10mm, 0.8)  # Normalize values between 0 and 0.8
+    if r10mm is not None and lat_min <= lat <= lat_max and lon_min <= lon <= lon_max:  # Filter points within Puglia
+        # Normalize r10mm to a range between 0 and 1 for opacity
+        fill_opacity = min(r10mm / 1.6, 1.0)
+        color = f'rgba(0, 0, 255, {fill_opacity})'  # Blue color with varying opacity
         folium.CircleMarker(
             location=[lat, lon],
             radius=5,
-            color="blue",
+            color=color,
             fill=True,
-            fill_color="blue",
+            fill_color=color,
             fill_opacity=fill_opacity,
             popup=f"Days with rainfall >10mm: {r10mm:.2f}"
         ).add_to(mappa)
@@ -98,13 +86,13 @@ for row in data:
 # Save the interactive map as an HTML file
 mappa.save("Interactive_map.html")
 
-print("Interactive map saved as mappa_interattiva.html! Open it in a browser to view it.")
+print("Interactive map saved as Interactive_map.html! Open it in a browser to view it.")
 
 # Export data to JSON, ignoring NaN values
 data_json = []
-for row in data:
+for row in rows:
     lat, lon, r10mm = row
-    if r10mm is not None:
+    if r10mm is not None and lat_min <= lat <= lat_max and lon_min <= lon <= lon_max:  # Filter points within Puglia
         data_json.append({"latitude": lat, "longitude": lon, "r10mm": r10mm})
 
 # Save data to a JSON file
@@ -113,6 +101,9 @@ with open(json_file, "w") as f:
     json.dump(data_json, f, indent=4)
 
 print(f"Data successfully exported to {json_file}!")
+
+# Close the database connection
+conn.close()
 
 
 

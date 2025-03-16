@@ -122,10 +122,6 @@ Below are the fundamental parts of the code necessary for understanding its core
   if "time" in ds.dims:
       precip_puglia = precip_puglia.mean(dim="time")
   ```
-
-SQLite Database Structure for Precipitation Data
-To efficiently store and query the precipitation data for visualization, the dataset is processed and saved into an SQLite database. The database consists of a single table, precipitation_data, which holds relevant climate metrics for the Puglia region. Below is the schema of the table:
-
 ### **SQLite Database Structure for Precipitation Data**
 
 To efficiently store and query the precipitation data for visualization, the dataset is processed and saved into an SQLite database. The database consists of a single table, `precipitation_data`, which holds relevant climate metrics for the Puglia region. Below is the schema of the table:
